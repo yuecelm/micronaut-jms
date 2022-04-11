@@ -35,6 +35,7 @@ import javax.jms.TextMessage;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.Map;
@@ -88,12 +89,14 @@ public final class DefaultSerializerDeserializer implements Serializer, Deserial
             final String key = keys.nextElement();
             output.put(key, message.getObject(key));
         }
+        System.out.println("deserializeMap: " + output.toString());
         return (T) output;
     }
 
     @SuppressWarnings("unchecked")
     private <T> T deserializeText(final TextMessage message,
                                   final Class<T> clazz) throws JMSException, IOException {
+        System.out.println("deserializeText: " + message.getText());
         if (clazz.isAssignableFrom(String.class)) {
             return (T) message.getText();
         }
@@ -103,13 +106,14 @@ public final class DefaultSerializerDeserializer implements Serializer, Deserial
     private <T> T deserializeBytes(final BytesMessage message) throws JMSException {
         byte[] bytes = new byte[(int) message.getBodyLength()];
         message.readBytes(bytes);
+        System.out.println("deserializeBytes: " + Arrays.toString(bytes));
         return (T) bytes;
     }
 
     @SuppressWarnings("unchecked")
     private <T> T deserializeObject(final ObjectMessage message,
                                     final Class<T> clazz) throws JMSException, IOException {
-
+        System.out.println("deserializeObject: " + message.getObject().toString());
         Serializable body = message.getObject();
         if (body instanceof String) {
             // if it's a String and the client asks for String, return that
@@ -148,6 +152,7 @@ public final class DefaultSerializerDeserializer implements Serializer, Deserial
 
     private MapMessage serializeMap(final Session session,
                                     final Map<?, ?> body) throws JMSException {
+        System.out.println("serializeMap: " + body.toString());
         final MapMessage message = session.createMapMessage();
         for (Map.Entry<?, ?> entry : body.entrySet()) {
             if (!(entry.getKey() instanceof CharSequence)) {
@@ -163,11 +168,13 @@ public final class DefaultSerializerDeserializer implements Serializer, Deserial
 
     private TextMessage serializeText(final Session session,
                                       final String body) throws JMSException {
+        System.out.println("serializeText: " + body);
         return session.createTextMessage(body);
     }
 
     private BytesMessage serializeBytes(final Session session,
                                         final byte[] body) throws JMSException {
+        System.out.println("serializeBytes: " + Arrays.toString(body));
         final BytesMessage message = session.createBytesMessage();
         message.writeBytes(body);
         return message;
@@ -175,11 +182,13 @@ public final class DefaultSerializerDeserializer implements Serializer, Deserial
 
     private ObjectMessage serializeObject(final Session session,
                                           final Serializable body) throws JMSException {
+        System.out.println("serializeObject: " + body.getClass().getCanonicalName());
         return session.createObjectMessage(body);
     }
 
     private StreamMessage serializeStream(final Session session,
                                           final Object[] body) throws JMSException {
+        System.out.println("serializeObject: " + Arrays.toString(body));
         StreamMessage message = session.createStreamMessage();
         for (Object o : body) {
             message.writeObject(o);
